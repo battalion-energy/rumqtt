@@ -99,25 +99,31 @@ impl MqttState {
         }
     }
 
-    /// Returns inflight outgoing packets and clears internal queues
-    pub fn clean(&mut self) -> Vec<Request> {
-        let mut pending = Vec::with_capacity(100);
-        let (first_half, second_half) = self
-            .outgoing_pub
-            .split_at_mut(self.last_puback as usize + 1);
+    /// Clears internal queues. Previously returned Vec<Request> with outgoing packets for future
+    /// transmission, but now just sends failure callbacks for each pending request.
+    pub fn clean(&mut self) {
+        //let mut pending = Vec::with_capacity(100);
+        // let (first_half, second_half) = self
+        //     .outgoing_pub
+        //     .split_at_mut(self.last_puback as usize + 1);
 
-        for publish in second_half.iter_mut().chain(first_half) {
+        for publish in self.outgoing_pub.iter_mut() {
             if let Some(publish) = publish.take() {
-                let request = Request::Publish(publish);
-                pending.push(request);
+                // Previous behavior: collect pending requests to resend later
+                // let request = Request::Publish(publish);
+                // pending.push(request);
+
+                // New behavior: send failure callbacks and drop
+                publish.notify_disconnect();
             }
         }
 
-        // remove and collect pending releases
-        for pkid in self.outgoing_rel.ones() {
-            let request = Request::PubRel(PubRel::new(pkid as u16));
-            pending.push(request);
-        }
+        // Rumqttc  removed and collect pending releases. Disabling this behavior for now.
+
+        // for pkid in self.outgoing_rel.ones() {
+        //     let request = Request::PubRel(PubRel::new(pkid as u16));
+        //     pending.push(request);
+        // }
         self.outgoing_rel.clear();
 
         // remove packet ids of incoming qos2 publishes
@@ -126,7 +132,7 @@ impl MqttState {
         self.await_pingresp = false;
         self.collision_ping_count = 0;
         self.inflight = 0;
-        pending
+        // pending
     }
 
     pub fn inflight(&self) -> u16 {

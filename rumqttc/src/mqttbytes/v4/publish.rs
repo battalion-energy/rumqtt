@@ -7,6 +7,8 @@ use bytes::{Buf, Bytes};
 pub enum PublishError {
     #[error("Publish dropped without being acknowledged")]
     Dropped,
+    #[error("Disconnected from broker")]
+    Disconnected,
 }
 
 pub type PublishCallback = Box<dyn FnOnce(Result<(), PublishError>) + Send>;
@@ -98,6 +100,10 @@ impl Publish {
     pub fn with_callback(mut self, cb: Option<PublishCallback>) -> Self {
         self.callback = Arc::new(CallbackHolder::new(cb));
         self
+    }
+
+    pub fn notify_disconnect(&self) {
+        self.callback.finish(Err(PublishError::Disconnected));
     }
 
     fn len(&self) -> usize {

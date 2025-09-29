@@ -127,19 +127,28 @@ impl EventLoop {
     pub fn clean(&mut self) {
         self.network = None;
         self.keepalive_timeout = None;
-        self.pending.extend(self.state.clean());
 
-        // drain requests from channel which weren't yet received
-        let mut requests_in_channel: Vec<_> = self.requests_rx.drain().collect();
+        // Old behavior: republish pending messages
+        // self.pending.extend(self.state.clean());
+        // New behavior: send failure callbacks to pending messages
+        self.state.clean();
 
-        requests_in_channel.retain(|request| {
-            match request {
-                Request::PubAck(_) => false, // Wait for publish retransmission, else the broker could be confused by an unexpected ack
-                _ => true,
+        // Old behavior: republish everything except PubAcks
+        // let mut requests_in_channel: Vec<_> = self.requests_rx.drain().collect();
+        // requests_in_channel.retain(|request| {
+        //     match request {
+        //         Request::PubAck(_) => false, // Wait for publish retransmission, else the broker could be confused by an unexpected ack
+        //         _ => true,
+        //     }
+        // });
+        // self.pending.extend(requests_in_channel);
+
+        // New behavior: send failure callbacks to pending Publishes
+        for request in self.requests_rx.drain() {
+            if let Request::Publish(publish) = request {
+                publish.notify_disconnect();
             }
-        });
-
-        self.pending.extend(requests_in_channel);
+        }
     }
 
     /// Yields Next notification or outgoing request and periodically pings
