@@ -18,6 +18,8 @@ pub enum ClientError {
     Request(Request),
     #[error("Failed to send mqtt requests to eventloop")]
     TryRequest(Request),
+    #[error("Unsupported options: {0}")]
+    UnsupportedOptions(String),
 }
 
 impl From<SendError<Request>> for ClientError {
@@ -101,6 +103,15 @@ impl AsyncClient {
         S: Into<String>,
         V: Into<Vec<u8>>,
     {
+        // The library does not currently retain the entire Publish while waiting for the PUBCOMP on
+        // a QoS 2 message, and we don't actually use QoS 2, so instead of adding that complexity
+        // we just error out if someone unexpectedly tries to ask for a delivery callback on a QoS
+        // 2 message.
+        if QoS::ExactlyOnce == qos && callback.is_some() {
+            return Err(ClientError::UnsupportedOptions(
+                "Delivery confirmation not supported for QoS 2".to_string(),
+            ));
+        }
         let topic = topic.into();
         let mut publish = Publish::new(&topic, qos, payload).with_callback(callback);
         publish.retain = retain;

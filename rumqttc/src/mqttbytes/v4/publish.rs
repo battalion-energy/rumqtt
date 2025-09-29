@@ -102,6 +102,10 @@ impl Publish {
         self
     }
 
+    pub fn notify_success(&self) {
+        self.callback.finish(Ok(()));
+    }
+
     pub fn notify_disconnect(&self) {
         self.callback.finish(Err(PublishError::Disconnected));
     }

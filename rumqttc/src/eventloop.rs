@@ -1,5 +1,5 @@
 use crate::{framed::Network, Transport};
-use crate::{Incoming, MqttState, NetworkOptions, Packet, Request, StateError};
+use crate::{Incoming, MqttState, NetworkOptions, Packet, QoS, Request, StateError};
 use crate::{MqttOptions, Outgoing};
 
 use crate::framed::AsyncReadWrite;
@@ -251,13 +251,25 @@ impl EventLoop {
                 self.mqtt_options.pending_throttle
             ), if !self.pending.is_empty() || (!inflight_full && !collision) => match o {
                 Ok(request) => {
-                    if let Some(outgoing) = self.state.handle_outgoing_packet(request)? {
-                        network.write(outgoing).await?;
-                    }
+                    let written_packet = if let Some(outgoing) = self.state.handle_outgoing_packet(request)? {
+                        network.write(outgoing.clone()).await?;
+                        Some(outgoing)
+                    } else {
+                        None
+                    };
                     match time::timeout(network_timeout, network.flush()).await {
                         Ok(inner) => inner?,
                         Err(_)=> return Err(ConnectionError::FlushTimeout),
                     };
+
+                    match written_packet {
+                        Some(Packet::Publish(publish)) if publish.qos == QoS::AtMostOnce => {
+                            // For QoS 0 publishes, we notify success immediately after sending the packet.
+                            // This is a change from previous behavior where success was notified only after receiving PubAck.
+                            publish.notify_success();
+                        },
+                        _ => {},
+                    }
                     Ok(self.state.events.pop_front().unwrap())
                 }
                 Err(_) => Err(ConnectionError::RequestsDone),

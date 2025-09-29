@@ -233,7 +233,9 @@ impl MqttState {
 
         self.last_puback = puback.pkid;
 
-        if publish.take().is_none() {
+        if let Some(publish) = publish.take() {
+            publish.notify_success();
+        } else {
             error!("Unsolicited puback packet: {:?}", puback.pkid);
             return Err(StateError::Unsolicited(puback.pkid));
         }
