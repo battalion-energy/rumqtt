@@ -1,8 +1,44 @@
+use std::sync::{Arc, Mutex};
+
 use super::*;
 use bytes::{Buf, Bytes};
 
+#[derive(Debug, thiserror::Error)]
+pub enum PublishError {
+    #[error("Publish dropped without being acknowledged")]
+    Dropped,
+}
+
+pub type PublishCallback = Box<dyn FnOnce(Result<(), PublishError>) + Send>;
+
+/// Holds the optional callback, and calls it with an error if dropped before callback
+/// is called.
+pub struct CallbackHolder {
+    callback: Mutex<Option<PublishCallback>>,
+}
+
+impl CallbackHolder {
+    pub fn new(callback: Option<PublishCallback>) -> Self {
+        Self {
+            callback: Mutex::new(callback),
+        }
+    }
+
+    pub fn finish(&self, result: Result<(), PublishError>) {
+        if let Some(cb) = self.callback.lock().unwrap().take() {
+            cb(result);
+        }
+    }
+}
+
+impl Drop for CallbackHolder {
+    fn drop(&mut self) {
+        self.finish(Err(PublishError::Dropped));
+    }
+}
+
 /// Publish packet
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct Publish {
     pub dup: bool,
     pub qos: QoS,
@@ -10,7 +46,25 @@ pub struct Publish {
     pub topic: String,
     pub pkid: u16,
     pub payload: Bytes,
+    /// Optional callback to be called when publish is acknowledged, or if we're
+    /// unable to deliver the publish. Arc is used here because this struct
+    /// must be Clone, and we want to consume and call the callback from whatever copy
+    /// is held by the handler that handles the publish complete messages.
+    pub callback: Arc<CallbackHolder>,
 }
+
+impl PartialEq for Publish {
+    fn eq(&self, other: &Self) -> bool {
+        self.dup == other.dup
+            && self.qos == other.qos
+            && self.retain == other.retain
+            && self.topic == other.topic
+            && self.pkid == other.pkid
+            && self.payload == other.payload
+    }
+}
+
+impl Eq for Publish {}
 
 impl Publish {
     pub fn new<S: Into<String>, P: Into<Vec<u8>>>(topic: S, qos: QoS, payload: P) -> Publish {
@@ -21,6 +75,7 @@ impl Publish {
             pkid: 0,
             topic: topic.into(),
             payload: Bytes::from(payload.into()),
+            callback: Self::null_callback(),
         }
     }
 
@@ -32,7 +87,17 @@ impl Publish {
             pkid: 0,
             topic: topic.into(),
             payload,
+            callback: Self::null_callback(),
         }
+    }
+
+    pub fn null_callback() -> Arc<CallbackHolder> {
+        Arc::new(CallbackHolder::new(None))
+    }
+
+    pub fn with_callback(mut self, cb: Option<PublishCallback>) -> Self {
+        self.callback = Arc::new(CallbackHolder::new(cb));
+        self
     }
 
     fn len(&self) -> usize {
@@ -77,6 +142,7 @@ impl Publish {
             pkid,
             topic,
             payload: bytes,
+            callback: Self::null_callback(),
         };
 
         Ok(publish)
@@ -165,6 +231,7 @@ mod test {
                 topic: "a/b".to_owned(),
                 pkid: 10,
                 payload: Bytes::from(&payload[..]),
+                callback: Publish::null_callback(),
             }
         );
     }
@@ -201,6 +268,7 @@ mod test {
                 topic: "a/b".to_owned(),
                 pkid: 0,
                 payload: Bytes::from(&[0x01, 0x02][..]),
+                callback: Publish::null_callback(),
             }
         );
     }
@@ -214,6 +282,7 @@ mod test {
             topic: "a/b".to_owned(),
             pkid: 10,
             payload: Bytes::from(vec![0xF1, 0xF2, 0xF3, 0xF4]),
+            callback: Publish::null_callback(),
         };
 
         let mut buf = BytesMut::new();
@@ -248,6 +317,7 @@ mod test {
             topic: "a/b".to_owned(),
             pkid: 0,
             payload: Bytes::from(vec![0xE1, 0xE2, 0xE3, 0xE4]),
+            callback: Publish::null_callback(),
         };
 
         let mut buf = BytesMut::new();

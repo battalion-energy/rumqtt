@@ -95,13 +95,14 @@ impl AsyncClient {
         qos: QoS,
         retain: bool,
         payload: V,
+        callback: Option<PublishCallback>,
     ) -> Result<(), ClientError>
     where
         S: Into<String>,
         V: Into<Vec<u8>>,
     {
         let topic = topic.into();
-        let mut publish = Publish::new(&topic, qos, payload);
+        let mut publish = Publish::new(&topic, qos, payload).with_callback(callback);
         publish.retain = retain;
         let publish = Request::Publish(publish);
         if !valid_topic(&topic) {
@@ -307,12 +308,14 @@ impl Client {
         qos: QoS,
         retain: bool,
         payload: V,
+        callback: Option<PublishCallback>,
     ) -> Result<(), ClientError>
     where
         S: Into<String>,
         V: Into<Vec<u8>>,
     {
-        self.client.try_publish(topic, qos, retain, payload)?;
+        self.client
+            .try_publish(topic, qos, retain, payload, callback)?;
         Ok(())
     }
 
