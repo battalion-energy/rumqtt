@@ -268,6 +268,11 @@ impl EventLoop {
                             // This is a change from previous behavior where success was notified only after receiving PubAck.
                             publish.notify_success();
                         },
+                        Some(Packet::Disconnect) => {
+                            // Per MQTT spec, client can close socket after sending DISCONNECT
+                            // Drop the network connection to close the socket immediately
+                            self.clean();
+                        },
                         _ => {},
                     }
                     Ok(self.state.events.pop_front().unwrap())
