@@ -9,7 +9,7 @@
 //! ----------------------------
 //!
 //! ```no_run
-//! use rumqttc::{MqttOptions, Client, QoS};
+//! use battalion_rumqttc::{MqttOptions, Client, QoS};
 //! use std::time::Duration;
 //! use std::thread;
 //!
@@ -33,7 +33,7 @@
 //! ------------------------------
 //!
 //! ```no_run
-//! use rumqttc::{MqttOptions, AsyncClient, QoS};
+//! use battalion_rumqttc::{MqttOptions, AsyncClient, QoS};
 //! use tokio::{task, time};
 //! use std::time::Duration;
 //! use std::error::Error;
@@ -501,7 +501,7 @@ impl MqttOptions {
     /// - port: The port number on which broker must be listening for incoming connections
     ///
     /// ```
-    /// # use rumqttc::MqttOptions;
+    /// # use battalion_rumqttc::MqttOptions;
     /// let options = MqttOptions::new("123", "localhost", 1883);
     /// ```
     pub fn new<S: Into<String>, T: Into<String>>(id: S, host: T, port: u16) -> MqttOptions {
@@ -533,7 +533,7 @@ impl MqttOptions {
     /// [`Url::parse(url)`](url::Url::parse) method and is only enabled when run using the "url" feature.
     ///
     /// ```
-    /// # use rumqttc::MqttOptions;
+    /// # use battalion_rumqttc::MqttOptions;
     /// let options = MqttOptions::parse_url("mqtt://example.com:1883?client_id=123").unwrap();
     /// ```
     ///
@@ -545,7 +545,7 @@ impl MqttOptions {
     /// [`set_transport`](MqttOptions::set_transport) method.
     ///
     /// ```ignore
-    /// # use rumqttc::{MqttOptions, Transport};
+    /// # use battalion_rumqttc::{MqttOptions, Transport};
     /// # use tokio_rustls::rustls::ClientConfig;
     /// # let root_cert_store = rustls::RootCertStore::empty();
     /// # let client_config = ClientConfig::builder()
@@ -636,7 +636,7 @@ impl MqttOptions {
     /// Panics if `clean_session` is false when `client_id` is empty.
     ///
     /// ```should_panic
-    /// # use rumqttc::MqttOptions;
+    /// # use battalion_rumqttc::MqttOptions;
     /// let mut options = MqttOptions::new("", "localhost", 1883);
     /// options.set_clean_session(false);
     /// ```

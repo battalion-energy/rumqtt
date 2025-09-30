@@ -1,7 +1,9 @@
-# rumqttc
+# battalion-rumqttc
 
-[![crates.io page](https://img.shields.io/crates/v/rumqttc.svg)](https://crates.io/crates/rumqttc)
-[![docs.rs page](https://docs.rs/rumqttc/badge.svg)](https://docs.rs/rumqttc)
+[![crates.io page](https://img.shields.io/crates/v/battalion-rumqttc.svg)](https://crates.io/crates/battalion-rumqttc)
+[![docs.rs page](https://docs.rs/battalion-rumqttc/badge.svg)](https://docs.rs/battalion-rumqttc)
+
+This is a fork of [rumqtt](https://github.com/bytebeamio/rumqtt) created by Battalion Energy to add message delivery confirmations and better handle disconnects.
 
 A pure rust MQTT client which strives to be robust, efficient and easy to use. This library is backed by an async(using tokio) eventloop which enables users to send and receive MQTT messages in correspondence with a broker.
 
@@ -11,7 +13,7 @@ A simple synchronous publish and subscribe
 ----------------------------
 
 ```rust
-use rumqttc::{MqttOptions, Client, QoS};
+use battalion_rumqttc::{MqttOptions, Client, QoS};
 use std::time::Duration;
 use std::thread;
 
@@ -35,7 +37,7 @@ A simple asynchronous publish and subscribe
 ------------------------------
 
 ```rust
-use rumqttc::{MqttOptions, AsyncClient, QoS};
+use battalion_rumqttc::{MqttOptions, AsyncClient, QoS};
 use tokio::{task, time};
 use std::time::Duration;
 use std::error::Error;

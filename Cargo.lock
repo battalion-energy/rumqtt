@@ -329,15 +329,47 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
+name = "battalion-rumqttc"
+version = "0.26.0"
+dependencies = [
+ "async-http-proxy",
+ "async-tungstenite 0.28.0",
+ "bincode",
+ "bytes",
+ "color-backtrace",
+ "fixedbitset 0.5.7",
+ "flume",
+ "futures-util",
+ "http 1.0.0",
+ "log",
+ "matches",
+ "native-tls",
+ "pretty_assertions",
+ "pretty_env_logger",
+ "rustls-native-certs",
+ "rustls-pemfile",
+ "rustls-webpki",
+ "serde",
+ "thiserror 2.0.8",
+ "tokio",
+ "tokio-native-tls",
+ "tokio-rustls 0.26.0",
+ "tokio-stream",
+ "tokio-util",
+ "url",
+ "ws_stream_tungstenite 0.14.0",
+]
+
+[[package]]
 name = "benchmarks"
 version = "0.4.0"
 dependencies = [
+ "battalion-rumqttc",
  "bytes",
  "futures 0.3.30",
  "itoa",
  "pprof",
  "pretty_env_logger",
- "rumqttc",
  "rumqttd",
  "serde",
  "serde_json",
@@ -2086,38 +2118,6 @@ dependencies = [
  "bitflags 2.6.0",
  "serde",
  "serde_derive",
-]
-
-[[package]]
-name = "rumqttc"
-version = "0.25.0"
-dependencies = [
- "async-http-proxy",
- "async-tungstenite 0.28.0",
- "bincode",
- "bytes",
- "color-backtrace",
- "fixedbitset 0.5.7",
- "flume",
- "futures-util",
- "http 1.0.0",
- "log",
- "matches",
- "native-tls",
- "pretty_assertions",
- "pretty_env_logger",
- "rustls-native-certs",
- "rustls-pemfile",
- "rustls-webpki",
- "serde",
- "thiserror 2.0.8",
- "tokio",
- "tokio-native-tls",
- "tokio-rustls 0.26.0",
- "tokio-stream",
- "tokio-util",
- "url",
- "ws_stream_tungstenite 0.14.0",
 ]
 
 [[package]]

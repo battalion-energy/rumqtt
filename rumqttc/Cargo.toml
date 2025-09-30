@@ -1,8 +1,8 @@
 [package]
-name = "rumqttc"
-version = "0.25.0"
+name = "battalion-rumqttc"
+version = "0.26.0"
 publish = true
-description = "An efficient and robust mqtt client for your connected devices"
+description = "An efficient and robust mqtt client for your connected devices (Battalion Energy fork of rumqttc)"
 keywords = ["mqtt", "iot", "coap", "http"]
 categories = ["network-programming"]
 rust-version = "1.64.0"
