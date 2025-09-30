@@ -11,7 +11,9 @@ pub enum PublishError {
     Disconnected,
 }
 
-pub type PublishCallback = Box<dyn FnOnce(Result<(), PublishError>) + Send>;
+pub type PublishResult = Result<(), PublishError>;
+
+pub type PublishCallback = Box<dyn FnOnce(PublishResult) + Send>;
 
 /// Holds the optional callback, and calls it with an error if dropped before callback
 /// is called.
@@ -26,7 +28,7 @@ impl CallbackHolder {
         }
     }
 
-    pub fn finish(&self, result: Result<(), PublishError>) {
+    pub fn finish(&self, result: PublishResult) {
         if let Some(cb) = self.callback.lock().unwrap().take() {
             cb(result);
         }
