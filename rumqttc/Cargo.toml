@@ -1,6 +1,6 @@
 [package]
 name = "battalion-rumqttc"
-version = "0.26.1"
+version = "0.26.2"
 publish = true
 description = "An efficient and robust mqtt client for your connected devices (Battalion Energy fork of rumqttc)"
 keywords = ["mqtt", "iot", "coap", "http"]
