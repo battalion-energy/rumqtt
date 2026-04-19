@@ -1,19 +1,17 @@
-#[cfg(feature = "use-rustls-no-provider")]
+#[cfg(feature = "use-rustls-pemfile")]
 use rustls_pemfile::Item;
 #[cfg(feature = "use-rustls-no-provider")]
-use tokio_rustls::rustls::{
-    self,
-    pki_types::{InvalidDnsNameError, ServerName},
-    ClientConfig, RootCertStore,
-};
+use tokio_rustls::rustls::{self, pki_types::{InvalidDnsNameError, ServerName}};
+#[cfg(feature = "use-rustls-pemfile")]
+use tokio_rustls::rustls::{ClientConfig, RootCertStore};
 #[cfg(feature = "use-rustls-no-provider")]
 use tokio_rustls::TlsConnector as RustlsConnector;
 
 #[cfg(feature = "use-rustls-no-provider")]
 use std::convert::TryFrom;
-#[cfg(feature = "use-rustls-no-provider")]
+#[cfg(feature = "use-rustls-pemfile")]
 use std::io::{BufReader, Cursor};
-#[cfg(feature = "use-rustls-no-provider")]
+#[cfg(feature = "use-rustls-pemfile")]
 use std::sync::Arc;
 
 use crate::framed::AsyncReadWrite;
@@ -48,15 +46,15 @@ pub enum Error {
     /// Error from rustls module
     #[error("TLS error: {0}")]
     TLS(#[from] rustls::Error),
-    #[cfg(feature = "use-rustls-no-provider")]
+    #[cfg(feature = "use-rustls-pemfile")]
     /// No valid CA cert found
     #[error("No valid CA certificate provided")]
     NoValidCertInChain,
-    #[cfg(feature = "use-rustls-no-provider")]
+    #[cfg(feature = "use-rustls-pemfile")]
     /// No valid client cert found
     #[error("No valid certificate for client authentication in chain")]
     NoValidClientCertInChain,
-    #[cfg(feature = "use-rustls-no-provider")]
+    #[cfg(feature = "use-rustls-pemfile")]
     /// No valid key found
     #[error("No valid key in chain")]
     NoValidKeyInChain,
@@ -68,6 +66,7 @@ pub enum Error {
 #[cfg(feature = "use-rustls-no-provider")]
 pub async fn rustls_connector(tls_config: &TlsConfiguration) -> Result<RustlsConnector, Error> {
     let config = match tls_config {
+        #[cfg(feature = "use-rustls-pemfile")]
         TlsConfiguration::Simple {
             ca,
             alpn,
@@ -171,7 +170,13 @@ pub async fn tls_connect(
 ) -> Result<Box<dyn AsyncReadWrite>, Error> {
     let tls: Box<dyn AsyncReadWrite> = match tls_config {
         #[cfg(feature = "use-rustls-no-provider")]
-        TlsConfiguration::Simple { .. } | TlsConfiguration::Rustls(_) => {
+        TlsConfiguration::Rustls(_) => {
+            let connector = rustls_connector(tls_config).await?;
+            let domain = ServerName::try_from(addr)?.to_owned();
+            Box::new(connector.connect(domain, tcp).await?)
+        }
+        #[cfg(feature = "use-rustls-pemfile")]
+        TlsConfiguration::Simple { .. } => {
             let connector = rustls_connector(tls_config).await?;
             let domain = ServerName::try_from(addr)?.to_owned();
             Box::new(connector.connect(domain, tcp).await?)

@@ -753,7 +753,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[cfg(all(feature = "use-rustls-no-provider", feature = "websocket"))]
+    #[cfg(all(feature = "use-rustls-pemfile", feature = "websocket"))]
     fn no_scheme() {
         use crate::{TlsConfiguration, Transport};
         let mut mqttoptions = MqttOptions::new("client_a", "a3f8czas.iot.eu-west-1.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MyCreds%2F20201001%2Feu-west-1%2Fiotdevicegateway%2Faws4_request&X-Amz-Date=20201001T130812Z&X-Amz-Expires=7200&X-Amz-Signature=9ae09b49896f44270f2707551581953e6cac71a4ccf34c7c3415555be751b2d1&X-Amz-SignedHeaders=host", 443);

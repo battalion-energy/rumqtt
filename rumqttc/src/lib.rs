@@ -259,7 +259,7 @@ impl Transport {
     }
 
     /// Use secure tcp with tls as transport
-    #[cfg(feature = "use-rustls-no-provider")]
+    #[cfg(feature = "use-rustls-pemfile")]
     pub fn tls(
         ca: Vec<u8>,
         client_auth: Option<(Vec<u8>, Vec<u8>)>,
@@ -292,10 +292,10 @@ impl Transport {
     }
 
     /// Use secure websockets with tls as transport
-    #[cfg(all(feature = "use-rustls-no-provider", feature = "websocket"))]
+    #[cfg(all(feature = "use-rustls-pemfile", feature = "websocket"))]
     #[cfg_attr(
         docsrs,
-        doc(cfg(all(feature = "use-rustls-no-provider", feature = "websocket")))
+        doc(cfg(all(feature = "use-rustls-pemfile", feature = "websocket")))
     )]
     pub fn wss(
         ca: Vec<u8>,
@@ -334,7 +334,7 @@ impl Transport {
 #[derive(Clone, Debug)]
 #[cfg(any(feature = "use-rustls-no-provider", feature = "use-native-tls"))]
 pub enum TlsConfiguration {
-    #[cfg(feature = "use-rustls-no-provider")]
+    #[cfg(feature = "use-rustls-pemfile")]
     Simple {
         /// ca certificate
         ca: Vec<u8>,
@@ -939,7 +939,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[cfg(all(feature = "use-rustls-no-provider", feature = "websocket"))]
+    #[cfg(all(feature = "use-rustls-pemfile", feature = "websocket"))]
     fn no_scheme() {
         let mut mqttoptions = MqttOptions::new("client_a", "a3f8czas.iot.eu-west-1.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MyCreds%2F20201001%2Feu-west-1%2Fiotdevicegateway%2Faws4_request&X-Amz-Date=20201001T130812Z&X-Amz-Expires=7200&X-Amz-Signature=9ae09b49896f44270f2707551581953e6cac71a4ccf34c7c3415555be751b2d1&X-Amz-SignedHeaders=host", 443);
 
